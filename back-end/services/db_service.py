@@ -1,0 +1,1 @@
+#definir como sera salvo os links relacionados a arquivos do minIO e os resumos de arquivos
