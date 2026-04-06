@@ -44,3 +44,9 @@ npm run dev
 
 O front-end estará disponível em:
 http://localhost:5173/
+
+---
+
+## Para realizar testes, usar o chrome com o CORS desativado!
+**rode isso no terminal:**
+- google-chrome --user-data-dir="/tmp/chrome_dev" --disable-web-security
