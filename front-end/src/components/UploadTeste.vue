@@ -1,10 +1,5 @@
 <template>
-  <div class="tela-inteira" :class="{ 'tema-escuro': modoEscuro }">
-    
-    <button @click="alternarTema" class="botao-tema">
-      {{ modoEscuro ? '☀️ Modo Claro' : '🌙 Modo Escuro' }}
-    </button>
-
+  <div class="tela-inteira">
     <div class="container">
       <h2 class="titulo">Teste de Upload</h2>
       
@@ -28,14 +23,6 @@
 import { ref } from 'vue';
 
 const arquivo = ref(null);
-
-
-const modoEscuro = ref(false);
-
-
-const alternarTema = () => {
-  modoEscuro.value = !modoEscuro.value;
-};
 
 const lidarComSelecao = (evento) => {
   arquivo.value = evento.target.files[0];
@@ -70,14 +57,12 @@ const fazerUpload = async () => {
 </script>
 
 <style scoped>
-
 .tela-inteira {
   display: flex;
   justify-content: center; 
   align-items: center;     
   min-height: 100vh;       
   background-color: #f4f4f9; 
-  transition: background-color 0.3s;
 }
 
 .container {
@@ -88,13 +73,11 @@ const fazerUpload = async () => {
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .titulo {
-  color: #333;
+  color: #000;
   margin-bottom: 30px;
-  transition: color 0.3s;
 }
 
 .area-upload {
@@ -106,18 +89,17 @@ const fazerUpload = async () => {
 
 .input-arquivo {
   padding: 15px;
-  border: 2px dashed #ccc;
+  border: 2px dashed #000;
   border-radius: 8px;
   width: 100%;
   max-width: 350px;
   cursor: pointer;
   background-color: #f9f9f9;
-  color: #333;
-  transition: all 0.3s;
+  color: #000;
 }
 
 .botao-enviar {
-  background-color: #4CAF50;
+  background-color: #000;
   color: white;
   border: none;
   padding: 12px 30px;
@@ -131,53 +113,6 @@ const fazerUpload = async () => {
 }
 
 .botao-enviar:hover {
-  background-color: #45a049;
-}
-
-.botao-tema {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: transparent;
-  border: 2px solid #ccc;
-  padding: 8px 15px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #555;
-  transition: all 0.3s;
-}
-
-.botao-tema:hover {
-  background-color: #e0e0e0;
-}
-
-
-.tema-escuro {
-  background-color: #121212;
-}
-
-.tema-escuro .container {
-  background-color: #1e1e1e;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
-
-.tema-escuro .titulo {
-  color: #e0e0e0;
-}
-
-.tema-escuro .input-arquivo {
-  background-color: #2d2d2d;
-  border-color: #555;
-  color: #e0e0e0;
-}
-
-.tema-escuro .botao-tema {
-  border-color: #555;
-  color: #e0e0e0;
-}
-
-.tema-escuro .botao-tema:hover {
   background-color: #333;
 }
 </style>

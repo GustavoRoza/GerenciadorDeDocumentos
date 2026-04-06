@@ -1,15 +1,14 @@
 <template>
-  <main>
-    <UploadTeste />
-  </main>
+  <router-view />
 </template>
 
 <script setup>
-// Importando o componente que você acabou de criar
-import UploadTeste from './components/UploadTeste.vue';
+// Note que não precisamos mais importar componentes aqui dentro.
+// O router.js já está fazendo esse trabalho por nós!
 </script>
 
 <style>
+/* Estilos globais para a página toda */
 body {
   background-color: #f4f4f9;
   margin: 0;
