@@ -49,4 +49,4 @@ http://localhost:5173/
 
 ## Para realizar testes, usar o chrome com o CORS desativado!
 **rode isso no terminal:**
-- google-chrome --user-data-dir="/tmp/chrome_dev" --disable-web-security
+- google-chrome --disable-web-security --user-data-dir="/tmp/chrome_dev_cors"
