@@ -26,7 +26,7 @@ async def gerar_resumo(caminho_arquivo: str) -> str:
 
         prompt = (
             "Você é um assistente do sistema Gerenciador de Documentos. "
-            "Crie um resumo claro, objetivo e estruturado em tópicos curtos para este documento."
+            "Crie um resumo claro, objetivo e em texto puro (sem tópicos) para este documento."
         )
 
         # 2. Gera o conteúdo enviando o prompt e a referência do arquivo
