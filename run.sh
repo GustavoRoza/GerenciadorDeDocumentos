@@ -11,6 +11,7 @@ if [ ! -d "venv" ]; then
     echo "Criando venv e instalando dependências..."
     python3 -m venv venv
     source venv/bin/activate
+    rm -rf back-end/venv
     pip install fastapi uvicorn python-multipart google-generativeai python-dotenv
 else
     source venv/bin/activate
