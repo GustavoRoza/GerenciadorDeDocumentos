@@ -10,6 +10,11 @@ Este repositório armazena o código-fonte do sistema de gerenciamento de docume
 - **Python** (v3.8 ou superior)
 
 ---
+## Rodar via Script
+1. tornar o arquivo run.sh executável: chmod +x run.sh
+2. rodar o arquivo: ./run.sh
+
+---
 
 ## 🚀 Como rodar o Back-end (FastAPI)
 
