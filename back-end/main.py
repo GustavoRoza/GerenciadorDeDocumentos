@@ -2,7 +2,7 @@ import os
 import shutil
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
-from services.ai_service import analisar_documento
+from services.ai_service import gerar_resumo
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -34,7 +34,7 @@ async def upload(file: UploadFile = File(...)):
 
     try:
         # Chama a função isolada no arquivo de serviço
-        resumo = await analisar_documento(temp_path)
+        resumo = await gerar_resumo(temp_path)
 
         # Print no terminal do backend conforme solicitado
         print("\n" + "=" * 40)

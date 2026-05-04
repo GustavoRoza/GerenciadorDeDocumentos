@@ -1,29 +1,42 @@
 import os
-from google import genai
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Inicializa o cliente uma única vez
-client = genai.Client()
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("Erro de configuração Crítico: GEMINI_API_KEY ausente no .env")
 
-async def analisar_documento(file_path: str) -> str:
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-2.5-flash')
+
+
+# Agora é async para funcionar com o 'await' do main.py
+async def gerar_resumo(caminho_arquivo: str) -> str:
+    """
+    Faz upload do PDF para a API do Gemini, processa e retorna o resumo.
+    """
+    if not os.path.exists(caminho_arquivo):
+        return "Erro: Arquivo não encontrado no servidor."
+
     try:
-        # 1. Upload para o Gemini
-        document_file = client.files.upload(file=file_path)
+        # 1. Envia o arquivo físico para a IA
+        arquivo_gemini = genai.upload_file(path=caminho_arquivo, mime_type="application/pdf")
 
-        # 2. Geração do resumo
-        prompt = ("Analise este documento e faça um resumo destacando os pontos principais. Quero o resume em texto bruto, sem quebras de linha "
-                  "e caracteres especiais.")
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=[document_file, prompt]
+        prompt = (
+            "Você é um assistente do sistema Gerenciador de Documentos. "
+            "Crie um resumo claro, objetivo e estruturado em tópicos curtos para este documento."
         )
 
-        # 3. Limpeza no Gemini (opcional, dependendo da sua cota)
-        client.files.delete(name=document_file.name)
+        # 2. Gera o conteúdo enviando o prompt e a referência do arquivo
+        response = model.generate_content([prompt, arquivo_gemini])
+        resumo_gerado = response.text
 
-        return response.text
+        # 3. Limpeza: Apaga o documento dos servidores do Google imediatamente após o uso
+        genai.delete_file(arquivo_gemini.name)
+
+        return resumo_gerado
+
     except Exception as e:
-        print(f"❌ Erro no serviço de IA: {str(e)}")
-        raise e
+        return f"Indisponibilidade no serviço de IA: {str(e)}"
