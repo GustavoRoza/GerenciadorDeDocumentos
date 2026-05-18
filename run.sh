@@ -8,13 +8,21 @@ echo "Iniciando o Back-end (FastAPI)..."
 cd back-end
 
 if [ ! -d "venv" ]; then
-    echo "Criando venv e instalando dependências..."
+    echo "Criando ambiente virtual (venv)..."
     python3 -m venv venv
-    source venv/bin/activate
-    rm -rf back-end/venv
-    pip install fastapi uvicorn python-multipart google-generativeai python-dotenv
+fi
+
+source venv/bin/activate
+
+if [ -f "requirements.txt" ]; then
+    echo "Verificando e instalando dependências do requirements.txt..."
+    pip install --upgrade pip
+    pip install -r requirements.txt
 else
-    source venv/bin/activate
+    echo "AVISO: requirements.txt não encontrado! Instalando dependências padrão..."
+    pip install --upgrade pip
+    # Adicionado psycopg2-binary na lista abaixo
+    pip install fastapi uvicorn python-multipart google-generativeai python-dotenv sqlalchemy psycopg2-binary
 fi
 
 uvicorn main:app --reload &
