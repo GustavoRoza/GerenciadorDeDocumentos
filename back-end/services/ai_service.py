@@ -57,7 +57,7 @@ async def gerar_resumo(caminho_arquivo: str) -> str:
 
         prompt = (
             "Você é um assistente do sistema Gerenciador de Documentos. "
-            "Crie um resumo claro, objetivo e em texto puro (sem tópicos) para este documento."
+            "Crie um resumo claro, de no máximo 500 caracteres, objetivo e em texto puro (sem tópicos) para este documento."
         )
 
         response = model.generate_content([prompt, arquivo_gemini])
