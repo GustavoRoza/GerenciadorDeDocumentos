@@ -14,22 +14,22 @@ if not api_key:
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-# # --- Configuração MinIO ---
-# MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "127.0.0.1:9000")
-# MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-# MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-# NOME_DO_BUCKET = "documentos" 
+# --- Configuração MinIO ---
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "127.0.0.1:9000")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+NOME_DO_BUCKET = "documentos"
 
-# minio_client = Minio(
-#     MINIO_ENDPOINT,
-#     access_key=MINIO_ACCESS_KEY,
-#     secret_key=MINIO_SECRET_KEY,
-#     secure=False # Sem HTTPS localmente
-# )
+minio_client = Minio(
+    MINIO_ENDPOINT,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=False # Sem HTTPS localmente
+)
 
-# # Cria o bucket automaticamente se ele ainda não existir
-# if not minio_client.bucket_exists(NOME_DO_BUCKET):
-#     minio_client.make_bucket(NOME_DO_BUCKET)
+# Cria o bucket automaticamente se ele ainda não existir
+if not minio_client.bucket_exists(NOME_DO_BUCKET):
+    minio_client.make_bucket(NOME_DO_BUCKET)
 
 
 # A função mantém o mesmo nome e assinatura para não quebrar o main.py
@@ -42,15 +42,15 @@ async def gerar_resumo(caminho_arquivo: str) -> str:
 
     try:
         # 1. Gerar ID e salvar no MinIO invisível para o main.py
-        # id_unico = str(uuid.uuid4())
-        # nome_arquivo_minio = f"{id_unico}.pdf"
+        id_unico = str(uuid.uuid4())
+        nome_arquivo_minio = f"{id_unico}.pdf"
 
-        # minio_client.fput_object(
-        #     NOME_DO_BUCKET,
-        #     nome_arquivo_minio,
-        #     caminho_arquivo,
-        #     content_type="application/pdf"
-        # )
+        minio_client.fput_object(
+            NOME_DO_BUCKET,
+            nome_arquivo_minio,
+            caminho_arquivo,
+            content_type="application/pdf"
+        )
 
         # 2. Processamento normal da IA
         arquivo_gemini = genai.upload_file(path=caminho_arquivo, mime_type="application/pdf")

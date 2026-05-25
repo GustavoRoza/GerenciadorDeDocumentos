@@ -52,6 +52,7 @@ echo "Back-end online!"
 
 echo "Iniciando o Front-end (Vue/Vite)..."
 cd front-end
+npm install
 npm run dev &
 PID_FRONT=$!
 cd ..
