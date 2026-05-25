@@ -8,6 +8,7 @@ Este repositório armazena o código-fonte do sistema de gerenciamento de docume
 
 - **Node.js** (v20.19.0 ou superior)  
 - **Python** (v3.8 ou superior)
+- **PostgreSQL** (Instalado e ativo na máquina local)
 
 ---
 ## Rodar via Script
@@ -16,7 +17,7 @@ Este repositório armazena o código-fonte do sistema de gerenciamento de docume
 
 ---
 
-## 🚀 Como rodar o Back-end (FastAPI)
+## 🚀 Como rodar o Back-end e configurar Banco de dados (FastAPI e Postgres)
 
 1. Acesse a pasta do servidor:
 cd back-end
@@ -28,7 +29,13 @@ source venv/bin/activate
 3. Instale as dependências:
 pip install -r requirements.txt
 
-4. Inicie a API:
+4. Criar arquivo **`.env`** dentro da pasta `back-end/`:
+   - GEMINI_API_KEY=**`SuaChaveAqui`**
+   - Substitua **`'usuario'`** e **`'senha'`** (deixe por padrão o usuario como **`"postgres"`**)
+     - DATABASE_URL=postgresql://usuario:senha@localhost:5432/gerenciador_documentos
+5. Criar Banco de dados: python init_db.py
+
+6. Inicie a API:
 uvicorn main:app --reload
 
 A API estará disponível em:
