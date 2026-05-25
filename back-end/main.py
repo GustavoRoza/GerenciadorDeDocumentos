@@ -4,6 +4,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from services.ai_service import gerar_resumo
 from fastapi.middleware.cors import CORSMiddleware
+from services.document_service import buscar_documentos_no_banco
 
 # banco
 
@@ -103,3 +104,18 @@ async def upload(file: UploadFile = File(...), db: Session = Depends(get_db)):
         # Garante a remoção do arquivo temporário independente de sucesso ou erro
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+@app.get("/documentos/buscar")
+async def buscar_documentos(q: str = "", db: Session = Depends(get_db)):
+    """
+    Endpoint para buscar documentos. 
+    A lógica pesada foi movida para services/document_service.py
+    """
+    try:
+        # Chama a função isolada no arquivo de serviço
+        resultado = buscar_documentos_no_banco(q, db)
+        return resultado
+        
+    except Exception as e:
+        print(f"❌ Erro ao buscar documentos: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno ao realizar a busca.")

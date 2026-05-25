@@ -5,7 +5,6 @@
       <h1>Gerenciador de Documentos</h1>
       
       <div class="botoes">
-        <!-- Botão para voltar ao Login -->
         <router-link to="/" class="botao-voltar">
           Sair
         </router-link>
@@ -17,14 +16,81 @@
     </header>
 
     <div class="barra-pesquisa">
-      <input type="text" placeholder="Pesquisar documentos..." />
+      <input 
+        type="text" 
+        v-model="termoPesquisa"
+        @input="executarBusca"
+        placeholder="Pesquisar por conteúdo, palavras-chave ou resumo..." 
+      />
+    </div>
+
+    <div class="lista-documentos">
+      <div v-if="carregando" class="mensagem-estado">Buscando documentos...</div>
+      
+      <div v-else-if="documentos.length === 0" class="mensagem-estado">
+        Nenhum documento encontrado para esta pesquisa.
+      </div>
+
+      <div v-else v-for="doc in documentos" :key="doc.id" class="card-documento">
+        <div class="topo-card">
+          <span class="nome-arquivo">📄 {{ doc.nome_original }}</span>
+          <span class="data-arquivo">{{ formatarData(doc.data_criacao) }}</span>
+        </div>
+        <div class="conteudo-card">
+          <p class="titulo-resumo">Resumo da IA:</p>
+          <p class="texto-resumo">{{ doc.resumo_ia || 'Este documento não possui resumo disponível.' }}</p>
+        </div>
+      </div>
     </div>
     
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue';
+
+const termoPesquisa = ref('');
+const documentos = ref([]);
+const carregando = ref(false);
+let timeoutBusca = null;
+
+// Função que faz a requisição para o endpoint do FastAPI
+const executarBusca = () => {
+  // debounce simples para não sobrecarregar o servidor a cada tecla digitada
+  clearTimeout(timeoutBusca);
+  timeoutBusca = setTimeout(async () => {
+    carregando.value = true;
+    try {
+      const url = `http://localhost:8000/documentos/buscar?q=${encodeURIComponent(termoPesquisa.value)}`;
+      const resposta = await fetch(url);
+      if (resposta.ok) {
+        documentos.value = await resposta.getJson ? await resposta.json() : [];
+      } else {
+        console.error("Erro na resposta do servidor");
+      }
+    } catch (erro) {
+      console.error("Erro ao buscar documentos:", erro);
+    } finally {
+      carregando.value = false;
+    }
+  }, 300); // Aguarda 300ms após o usuário parar de digitar
+};
+
+// Formata a data retornada pelo banco para o padrão brasileiro
+const formatarData = (dataString) => {
+  if (!dataString) return '';
+  const data = new Date(dataString);
+  return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+};
+
+// Carrega todos os documentos ao abrir a tela
+onMounted(() => {
+  executarBusca();
+});
+</script>
+
 <style scoped>
-/* Visual Minimalista Preto e Branco */
+/* Mantendo o padrão Minimalista Preto e Branco */
 .dashboard-container {
   max-width: 800px;
   margin: 0 auto;
@@ -49,10 +115,9 @@ h1 {
 
 .botoes {
   display: flex;
-  gap: 15px; /* Espaço entre os botões */
+  gap: 15px;
 }
 
-/* Estilo do botão novo (Principal) */
 .botao-novo {
   background-color: #000;
   color: #fff;
@@ -67,7 +132,6 @@ h1 {
   background-color: #444;
 }
 
-/* Estilo do botão voltar/sair (Secundário) */
 .botao-voltar {
   background-color: transparent;
   color: #000;
@@ -90,7 +154,67 @@ h1 {
   font-size: 16px;
   border: 2px solid #000;
   border-radius: 5px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   box-sizing: border-box; 
+  outline: none;
+}
+
+.barra-pesquisa input:focus {
+  background-color: #f9f9f9;
+}
+
+/* Novos estilos para os resultados */
+.lista-documentos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mensagem-estado {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.card-documento {
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 20px;
+  background-color: #fff;
+}
+
+.topo-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.nome-arquivo {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.data-arquivo {
+  font-size: 12px;
+  color: #666;
+}
+
+.titulo-resumo {
+  margin: 0 0 5px 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+}
+
+.texto-resumo {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #222;
+  text-align: justify;
 }
 </style>
