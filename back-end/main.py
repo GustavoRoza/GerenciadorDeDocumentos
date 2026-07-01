@@ -4,7 +4,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from services.ai_service import gerar_resumo
 from fastapi.middleware.cors import CORSMiddleware
-from services.document_service import buscar_documentos_no_banco
+from services.document_service import buscar_documentos_no_banco, buscar_estatisticas_tipos
 
 # banco
 
@@ -119,3 +119,13 @@ async def buscar_documentos(q: str = "", db: Session = Depends(get_db)):
     except Exception as e:
         print(f"❌ Erro ao buscar documentos: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno ao realizar a busca.")
+
+@app.get("/documentos/estatisticas")
+async def estatisticas_documentos(db: Session = Depends(get_db)):
+    """ Endpoint para retornar a contagem de arquivos por tipo. """
+    try:
+        resultado = buscar_estatisticas_tipos(db)
+        return resultado
+    except Exception as e:
+        print(f"❌ Erro ao buscar estatísticas: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno ao buscar estatísticas.")

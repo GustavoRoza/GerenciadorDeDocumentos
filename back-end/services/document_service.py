@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import models
 
 def buscar_documentos_no_banco(q: str, db: Session):
@@ -30,3 +31,14 @@ def buscar_documentos_no_banco(q: str, db: Session):
         })
         
     return resultado
+
+def buscar_estatisticas_tipos(db: Session):
+    """
+    Agrupa os documentos por mimetype e conta quantos de cada tipo existem.
+    """
+    resultados = db.query(
+        models.Documento.mimetype,
+        func.count(models.Documento.id).label('quantidade')
+    ).group_by(models.Documento.mimetype).all()
+    
+    return [{"tipo": r.mimetype, "quantidade": r.quantidade} for r in resultados]

@@ -14,7 +14,12 @@
         </router-link>
       </div>
     </header>
-
+    <div class="estatisticas-container" v-if="estatisticas.length > 0">
+      <div v-for="stat in estatisticas" :key="stat.tipo" class="card-estatistica">
+        <span class="tipo-arquivo">{{ formatarTipo(stat.tipo) }}</span>
+        <span class="quantidade-arquivo">{{ stat.quantidade }} salvos</span>
+      </div>
+    </div>
     <div class="barra-pesquisa">
       <input 
         type="text" 
@@ -51,6 +56,7 @@ import { ref, onMounted } from 'vue';
 
 const termoPesquisa = ref('');
 const documentos = ref([]);
+const estatisticas = ref([]);
 const carregando = ref(false);
 let timeoutBusca = null;
 
@@ -81,6 +87,35 @@ const formatarData = (dataString) => {
   if (!dataString) return '';
   const data = new Date(dataString);
   return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+};
+
+const buscarEstatisticas = async () => {
+  try {
+    const url = `http://localhost:8000/documentos/estatisticas`;
+    const resposta = await fetch(url);
+    if (resposta.ok) {
+      estatisticas.value = await resposta.json();
+    }
+  } catch (erro) {
+    console.error("Erro ao buscar estatísticas:", erro);
+  }
+};
+
+// Modifique o onMounted para chamar a nova função
+onMounted(() => {
+  executarBusca();
+  buscarEstatisticas();
+});
+
+
+const formatarTipo = (mimetype) => {
+  if (mimetype === 'application/pdf') return 'PDF';
+  
+  // Tratamento genérico para outros formatos futuros (ex: image/png -> PNG)
+  if (mimetype && mimetype.includes('/')) {
+    return mimetype.split('/')[1].toUpperCase();
+  }
+  return mimetype;
 };
 
 // Carrega todos os documentos ao abrir a tela
@@ -216,5 +251,35 @@ h1 {
   line-height: 1.5;
   color: #222;
   text-align: justify;
+}
+
+.estatisticas-container {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.card-estatistica {
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 150px;
+}
+
+.tipo-arquivo {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.quantidade-arquivo {
+  font-size: 20px;
+  font-weight: bold;
 }
 </style>
