@@ -14,12 +14,14 @@
         </router-link>
       </div>
     </header>
+    
     <div class="estatisticas-container" v-if="estatisticas.length > 0">
       <div v-for="stat in estatisticas" :key="stat.tipo" class="card-estatistica">
         <span class="tipo-arquivo">{{ formatarTipo(stat.tipo) }}</span>
         <span class="quantidade-arquivo">{{ stat.quantidade }} salvos</span>
       </div>
     </div>
+    
     <div class="barra-pesquisa">
       <input 
         type="text" 
@@ -45,7 +47,13 @@
           <p class="titulo-resumo">Resumo da IA:</p>
           <p class="texto-resumo">{{ doc.resumo_ia || 'Este documento não possui resumo disponível.' }}</p>
         </div>
-      </div>
+        
+        <div class="acoes-card" v-if="doc.url_download">
+          <a :href="doc.url_download" target="_blank" rel="noopener noreferrer" class="botao-baixar">
+            ⬇ Baixar Arquivo
+          </a>
+        </div>
+        </div>
     </div>
     
   </div>
@@ -70,7 +78,8 @@ const executarBusca = () => {
       const url = `http://localhost:8000/documentos/buscar?q=${encodeURIComponent(termoPesquisa.value)}`;
       const resposta = await fetch(url);
       if (resposta.ok) {
-        documentos.value = await resposta.getJson ? await resposta.json() : [];
+        // Correção aplicada aqui: removido o resposta.getJson que era inválido
+        documentos.value = await resposta.json();
       } else {
         console.error("Erro na resposta do servidor");
       }
@@ -101,13 +110,6 @@ const buscarEstatisticas = async () => {
   }
 };
 
-// Modifique o onMounted para chamar a nova função
-onMounted(() => {
-  executarBusca();
-  buscarEstatisticas();
-});
-
-
 const formatarTipo = (mimetype) => {
   if (mimetype === 'application/pdf') return 'PDF';
   
@@ -118,9 +120,10 @@ const formatarTipo = (mimetype) => {
   return mimetype;
 };
 
-// Carrega todos os documentos ao abrir a tela
+// Unificado os dois onMounted em um só
 onMounted(() => {
   executarBusca();
+  buscarEstatisticas();
 });
 </script>
 
@@ -198,7 +201,7 @@ h1 {
   background-color: #f9f9f9;
 }
 
-/* Novos estilos para os resultados */
+/* Estilos para os resultados */
 .lista-documentos {
   display: flex;
   flex-direction: column;
@@ -281,5 +284,31 @@ h1 {
 .quantidade-arquivo {
   font-size: 20px;
   font-weight: bold;
+}
+
+/* --- NOVAS CLASSES PARA O BOTÃO DE DOWNLOAD --- */
+.acoes-card {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #ddd; /* Linha sutil separando o resumo do botão */
+  display: flex;
+  justify-content: flex-end; /* Alinha o botão à direita */
+}
+
+.botao-baixar {
+  background-color: transparent;
+  color: #000;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: bold;
+  border: 2px solid #000;
+  border-radius: 5px;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.botao-baixar:hover {
+  background-color: #000;
+  color: #fff;
 }
 </style>
