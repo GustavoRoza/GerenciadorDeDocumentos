@@ -42,6 +42,9 @@ async def upload(file: UploadFile = File(...), db: Session = Depends(get_db)):
 
     # 1. Gerar o UUID único para o arquivo
     documento_id = uuid.uuid4()
+
+    nome_arquivo_minio = f"{documento_id}.pdf"
+    
     temp_path = f"temp_{file.filename}"
 
     # Salva localmente para processamento
@@ -53,7 +56,8 @@ async def upload(file: UploadFile = File(...), db: Session = Depends(get_db)):
 
     try:
         # Chama a função isolada no arquivo de serviço
-        resumo = await gerar_resumo(temp_path)
+        # resumo = await gerar_resumo(temp_path)
+        resumo = await gerar_resumo(temp_path, nome_arquivo_minio)
         # resumo = "Texto de teste: Resumo sem IA"
 
         # 3. Salvar no PostgreSQL

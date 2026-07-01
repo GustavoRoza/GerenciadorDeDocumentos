@@ -1,5 +1,4 @@
 import os
-import uuid
 import google.generativeai as genai
 from dotenv import load_dotenv
 from minio import Minio
@@ -32,8 +31,8 @@ if not minio_client.bucket_exists(NOME_DO_BUCKET):
     minio_client.make_bucket(NOME_DO_BUCKET)
 
 
-# A função mantém o mesmo nome e assinatura para não quebrar o main.py
-async def gerar_resumo(caminho_arquivo: str) -> str:
+# Mudança: Adicionamos 'nome_arquivo_minio' para receber o ID correto do main.py
+async def gerar_resumo(caminho_arquivo: str, nome_arquivo_minio: str) -> str:
     """
     Faz upload do PDF para o MinIO, processa no Gemini e retorna uma string formatada.
     """
@@ -41,10 +40,7 @@ async def gerar_resumo(caminho_arquivo: str) -> str:
         return "Erro: Arquivo não encontrado no servidor."
 
     try:
-        # 1. Gerar ID e salvar no MinIO invisível para o main.py
-        id_unico = str(uuid.uuid4())
-        nome_arquivo_minio = f"{id_unico}.pdf"
-
+        # 1. Salvar no MinIO usando o NOME EXATO que o main.py vai salvar no banco
         minio_client.fput_object(
             NOME_DO_BUCKET,
             nome_arquivo_minio,
