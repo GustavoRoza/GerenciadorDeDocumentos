@@ -34,7 +34,7 @@
     <div class="lista-documentos">
       <div v-if="carregando" class="mensagem-estado">Buscando documentos...</div>
       
-      <div v-else-if="documentos.length === 0" class="mensagem-estado">
+      <div v-else-if="documentos.length === 0 && termoPesquisa.trim() !== ''" class="mensagem-estado">
         Nenhum documento encontrado para esta pesquisa.
       </div>
 
@@ -53,7 +53,7 @@
             ⬇ Baixar Arquivo
           </a>
         </div>
-        </div>
+      </div>
     </div>
     
   </div>
@@ -66,20 +66,42 @@ const termoPesquisa = ref('');
 const documentos = ref([]);
 const estatisticas = ref([]);
 const carregando = ref(false);
+
 let timeoutBusca = null;
+let timeoutLimpeza = null; // Novo controle para limpar a tela após um tempo
+
+// Tempo que os resultados ficam na tela (em milissegundos). Ex: 60000 = 60 segundos
+const TEMPO_LIMPEZA_AUTOMATICA = 60000; 
 
 // Função que faz a requisição para o endpoint do FastAPI
 const executarBusca = () => {
-  // debounce simples para não sobrecarregar o servidor a cada tecla digitada
   clearTimeout(timeoutBusca);
+  clearTimeout(timeoutLimpeza); // Cancela a limpeza anterior se o usuário voltar a digitar
+
+  const termo = termoPesquisa.value.trim();
+
+  // Se o campo estiver vazio, limpa a tela e não faz a requisição
+  if (!termo) {
+    documentos.value = [];
+    return;
+  }
+
+  // debounce simples para não sobrecarregar o servidor
   timeoutBusca = setTimeout(async () => {
     carregando.value = true;
     try {
-      const url = `http://localhost:8000/documentos/buscar?q=${encodeURIComponent(termoPesquisa.value)}`;
+      const url = `http://localhost:8000/documentos/buscar?q=${encodeURIComponent(termo)}`;
       const resposta = await fetch(url);
+      
       if (resposta.ok) {
-        // Correção aplicada aqui: removido o resposta.getJson que era inválido
         documentos.value = await resposta.json();
+
+        // INICIA O CRONÔMETRO PARA LIMPAR A TELA SOZINHA
+        timeoutLimpeza = setTimeout(() => {
+          documentos.value = [];
+          termoPesquisa.value = ''; // Limpa também o que foi digitado
+        }, TEMPO_LIMPEZA_AUTOMATICA);
+
       } else {
         console.error("Erro na resposta do servidor");
       }
@@ -88,7 +110,7 @@ const executarBusca = () => {
     } finally {
       carregando.value = false;
     }
-  }, 300); // Aguarda 300ms após o usuário parar de digitar
+  }, 300);
 };
 
 // Formata a data retornada pelo banco para o padrão brasileiro
@@ -113,22 +135,21 @@ const buscarEstatisticas = async () => {
 const formatarTipo = (mimetype) => {
   if (mimetype === 'application/pdf') return 'PDF';
   
-  // Tratamento genérico para outros formatos futuros (ex: image/png -> PNG)
   if (mimetype && mimetype.includes('/')) {
     return mimetype.split('/')[1].toUpperCase();
   }
   return mimetype;
 };
 
-// Unificado os dois onMounted em um só
 onMounted(() => {
-  executarBusca();
+  // REMOVIDO: executarBusca(); 
+  // Agora só busca as estatísticas ao abrir a tela. A busca de arquivos só ocorre ao digitar.
   buscarEstatisticas();
 });
 </script>
 
 <style scoped>
-/* Mantendo o padrão Minimalista Preto e Branco */
+/* Mantendo o padrão Minimalista Preto e Branco (sem alterações no seu CSS original) */
 .dashboard-container {
   max-width: 800px;
   margin: 0 auto;
@@ -201,7 +222,6 @@ h1 {
   background-color: #f9f9f9;
 }
 
-/* Estilos para os resultados */
 .lista-documentos {
   display: flex;
   flex-direction: column;
@@ -286,13 +306,12 @@ h1 {
   font-weight: bold;
 }
 
-/* --- NOVAS CLASSES PARA O BOTÃO DE DOWNLOAD --- */
 .acoes-card {
   margin-top: 15px;
   padding-top: 15px;
-  border-top: 1px dashed #ddd; /* Linha sutil separando o resumo do botão */
+  border-top: 1px dashed #ddd; 
   display: flex;
-  justify-content: flex-end; /* Alinha o botão à direita */
+  justify-content: flex-end; 
 }
 
 .botao-baixar {
