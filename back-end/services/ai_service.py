@@ -59,10 +59,36 @@ async def gerar_resumo(caminho_arquivo: str, nome_arquivo_minio: str) -> str:
         response = model.generate_content([prompt, arquivo_gemini])
         resumo_gerado = response.text
 
+        try:
+            resultado_embedding = genai.embed_content(
+                model="models/gemini-embedding-001",
+                content=resumo_gerado,
+                task_type="retrieval_document",
+                output_dimensionality=768 # <- A MÁGICA ACONTECE AQUI
+            )
+            vetor_gerado = resultado_embedding['embedding'] 
+        except Exception as e:
+            print(f"Erro ao gerar embedding: {e}")
+            vetor_gerado = None
+
         # 3. Limpeza do Google
         genai.delete_file(arquivo_gemini.name)
 
-        return resumo_gerado
+        return resumo_gerado, vetor_gerado
 
     except Exception as e:
         return f"Indisponibilidade no processamento: {str(e)}"
+    
+def gerar_vetor_pesquisa(texto_busca: str):
+    """ Converte a busca do usuário em coordenadas matemáticas (768 dimensões). """
+    try:
+        resultado = genai.embed_content(
+            model="models/gemini-embedding-001",
+            content=texto_busca,
+            task_type="retrieval_query",
+            output_dimensionality=768 # <- GARANTINDO O TAMANHO EXATO
+        )
+        return resultado['embedding']
+    except Exception as e:
+        print(f"Erro ao vetorizar a busca: {e}")
+        return None

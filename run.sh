@@ -37,7 +37,7 @@ if [ -f "requirements.txt" ]; then
 else
     echo "AVISO: requirements.txt não encontrado! Instalando dependências padrão..."
     pip install --upgrade pip
-    pip install fastapi uvicorn python-multipart google-generativeai python-dotenv sqlalchemy psycopg2-binary
+    pip install fastapi uvicorn python-multipart google-generativeai python-dotenv sqlalchemy psycopg2-binary minio pgvector
 fi
 
 uvicorn main:app --reload &

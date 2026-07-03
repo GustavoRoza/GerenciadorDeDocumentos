@@ -1,5 +1,6 @@
 import uuid
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import Column, String, Text, BigInteger, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
 from database import Base
@@ -14,3 +15,4 @@ class Documento(Base):
     tamanho = Column(BigInteger, nullable=False)
     data_criacao = Column(DateTime(timezone=True), server_default=func.now())
     usuario_id = Column(UUID(as_uuid=True), nullable=True)
+    vetor_resumo = Column(Vector(768), nullable=True)

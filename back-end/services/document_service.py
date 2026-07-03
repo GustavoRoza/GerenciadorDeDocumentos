@@ -5,6 +5,7 @@ from sqlalchemy import func
 from minio import Minio
 from dotenv import load_dotenv
 import models
+from services.ai_service import gerar_vetor_pesquisa
 
 load_dotenv()
 
@@ -25,20 +26,36 @@ minio_client = Minio(
 
 def buscar_documentos_no_banco(q: str, db: Session):
     """
-    Realiza a consulta no banco de dados buscando documentos
-    pelo nome original ou pelo resumo gerado pela IA.
-    Retorna os dados junto com um link temporário para download.
+    Realiza a busca usando pgvector.
+    Se a IA falhar, faz o fallback para a busca clássica.
     """
     query = db.query(models.Documento)
     
     if q:
-        # Filtra onde o resumo OU o nome original contenham o termo pesquisado
-        query = query.filter(
-            (models.Documento.resumo_ia.ilike(f"%{q}%")) |
-            (models.Documento.nome_original.ilike(f"%{q}%"))
-        )
+        vetor_pergunta = gerar_vetor_pesquisa(q)
+        if vetor_pergunta:
+            distancia = models.Documento.vetor_resumo.cosine_distance(vetor_pergunta)
+            
+            # A TRAVA DE SEGURANÇA: 
+            # O documento SÓ aparece se tiver a palavra exata (ilike)
+            # OU se a IA tiver certeza altíssima do contexto (distância < 0.38).
+            # Qualquer coisa diferente disso é bloqueada e não aparece na tela.
+            query = query.filter(
+                (models.Documento.nome_original.ilike(f"%{q}%")) |
+                (models.Documento.resumo_ia.ilike(f"%{q}%")) |
+                (distancia < 0.38)
+            ).order_by(distancia)
+        else:
+            query = query.filter(
+                (models.Documento.resumo_ia.ilike(f"%{q}%")) |
+                (models.Documento.nome_original.ilike(f"%{q}%"))
+            )
+    else:
+        query = query.order_by(models.Documento.data_criacao.desc())
         
-    documentos = query.order_by(models.Documento.data_criacao.desc()).all()
+    # Como o filtro agora é rigoroso, podemos usar o .all() normal.
+    # Só vai retornar o que realmente tem a ver.
+    documentos = query.all()
     
     # Formatando o resultado para evitar erro de conversão de UUID e Datas no JSON
     resultado = []
@@ -80,3 +97,27 @@ def buscar_estatisticas_tipos(db: Session):
     ).group_by(models.Documento.mimetype).all()
     
     return [{"tipo": r.mimetype, "quantidade": r.quantidade} for r in resultados]
+
+def deletar_documento(documento_id: str, db: Session):
+    #busca o pdf no banco pra ver se ele existe
+    doc = db.query(models.Documento).filter(models.Documento.id == documento_id).first()
+    
+    if not doc:
+        return False
+
+    nome_arquivo_minio = f"{str(doc.id)}.pdf"
+
+    # deleta o PDF do MinIO
+    try:
+        minio_client.remove_object(NOME_DO_BUCKET, nome_arquivo_minio)
+        print(f"🗑️ Arquivo {nome_arquivo_minio} removido do MinIO.")
+    except Exception as e:
+        print(f"⚠️ Aviso: Erro ao deletar do MinIO (pode já ter sido apagado): {e}")
+
+    # seleta do banco
+    db.delete(doc)
+    db.commit()
+    print(f"🗑️ Registro {documento_id} removido do Banco de Dados.")
+    
+    return True
+

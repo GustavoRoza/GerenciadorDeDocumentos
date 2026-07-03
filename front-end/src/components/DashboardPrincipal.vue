@@ -49,6 +49,10 @@
         </div>
         
         <div class="acoes-card" v-if="doc.url_download">
+          <button @click="excluirDocumento(doc.id)" class="botao-excluir">
+            🗑️ Excluir
+          </button>
+
           <a :href="doc.url_download" target="_blank" rel="noopener noreferrer" class="botao-baixar">
             ⬇ Baixar Arquivo
           </a>
@@ -139,6 +143,30 @@ const formatarTipo = (mimetype) => {
     return mimetype.split('/')[1].toUpperCase();
   }
   return mimetype;
+};
+
+const excluirDocumento = async (id) => {
+  const confirmacao = confirm("Tem certeza que deseja excluir este documento permanentemente?");
+  if (!confirmacao) return;
+
+  try {
+    const resposta = await fetch(`http://localhost:8000/documentos/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (resposta.ok) {
+      documentos.value = documentos.value.filter(doc => doc.id !== id);
+      
+      buscarEstatisticas();
+      
+      alert("Documento excluído com sucesso!");
+    } else {
+      alert("Erro ao excluir o documento no servidor.");
+    }
+  } catch (erro) {
+    console.error("Erro ao excluir:", erro);
+    alert("Erro de comunicação com a API.");
+  }
 };
 
 onMounted(() => {
@@ -330,4 +358,23 @@ h1 {
   background-color: #000;
   color: #fff;
 }
+
+.botao-excluir {
+  background-color: transparent;
+  color: #dc3545; /* Vermelho */
+  padding: 8px 16px;
+  font-weight: bold;
+  border: 2px solid #dc3545;
+  border-radius: 5px;
+  transition: all 0.3s;
+  font-size: 14px;
+  cursor: pointer;
+  margin-right: 10px; /* Dá um espacinho do botão de baixar */
+}
+
+.botao-excluir:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
 </style>

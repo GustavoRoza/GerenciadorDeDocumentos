@@ -6,7 +6,7 @@ from services.ai_service import gerar_resumo
 from fastapi.middleware.cors import CORSMiddleware
 from services.document_service import buscar_documentos_no_banco, buscar_estatisticas_tipos
 
-# banco
+from services.document_service import buscar_documentos_no_banco, buscar_estatisticas_tipos, deletar_documento
 
 from sqlalchemy.orm import Session
 
@@ -57,14 +57,14 @@ async def upload(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
         # Chama a função isolada no arquivo de serviço
         # resumo = await gerar_resumo(temp_path)
-        resumo = await gerar_resumo(temp_path, nome_arquivo_minio)
-        # resumo = "Texto de teste: Resumo sem IA"
+        resumo_texto, vetor_gerado = await gerar_resumo(temp_path, nome_arquivo_minio)
 
         # 3. Salvar no PostgreSQL
         novo_documento = models.Documento(
             id=documento_id,
             nome_original=file.filename,
-            resumo_ia=resumo,
+            resumo_ia=resumo_texto,
+            vetor_resumo=vetor_gerado,
             mimetype=file.content_type,
             tamanho=tamanho_arquivo
         )
@@ -133,3 +133,15 @@ async def estatisticas_documentos(db: Session = Depends(get_db)):
     except Exception as e:
         print(f"❌ Erro ao buscar estatísticas: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno ao buscar estatísticas.")
+    
+@app.delete("/documentos/{documento_id}")
+async def excluir_documento_rota(documento_id: str, db: Session = Depends(get_db)):
+    sucesso = deletar_documento(documento_id, db)
+    
+    if not sucesso:
+        raise HTTPException(status_code=404, detail="Documento não encontrado.")
+    
+    return JSONResponse(
+        status_code=200, 
+        content={"mensagem": "Documento excluído com sucesso."}
+    )
